@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Laptop, Smartphone } from "lucide-react";
 import { getCatalog, type CatalogItem, type DeviceType } from "@/lib/prolog/engine";
+import { formatPKR } from "@/lib/format";
 
 export const Route = createFileRoute("/browse")({
   head: () => ({
@@ -98,7 +99,7 @@ function Card({ item, type, index }: { item: CatalogItem; type: DeviceType; inde
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{item.brand}</div>
           <h3 className="font-display text-base font-semibold">{item.name}</h3>
         </div>
-        <div className="font-display text-xl font-bold text-gradient">${item.price}</div>
+        <div className="font-display text-xl font-bold text-gradient">{formatPKR(item.price)}</div>
       </div>
       <div className="mt-4 space-y-2">
         {labels.map(([label, val]) => (
