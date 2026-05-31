@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Loader2, Briefcase, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { getRecommendations } from "@/lib/prolog/engine";
 
 export const Route = createFileRoute("/career")({
@@ -17,42 +18,41 @@ export const Route = createFileRoute("/career")({
   component: Career,
 });
 
-const CAREERS = [
-  { key: "software_engineer", label: "Software Engineer" },
-  { key: "ai_engineer", label: "AI Engineer" },
-  { key: "data_scientist", label: "Data Scientist" },
-  { key: "cyber_security", label: "Cyber Security Analyst" },
-  { key: "ethical_hacker", label: "Ethical Hacker" },
-  { key: "graphic_designer", label: "Graphic Designer" },
-  { key: "video_editor", label: "Video Editor" },
-  { key: "architect", label: "Architect" },
-  { key: "business", label: "Business Professional" },
-];
+const CAREER_KEYS = [
+  "software_engineer", "ai_engineer", "data_scientist", "cyber_security",
+  "ethical_hacker", "graphic_designer", "video_editor", "architect", "business",
+] as const;
 
 function Career() {
+  const { t } = useTranslation();
   const [career, setCareer] = useState<string | null>(null);
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, error } = useQuery({
     queryKey: ["career", career],
     queryFn: () => getRecommendations("laptop", { career: career!, budget: 3500 }),
-    enabled: !!career,
+    // Client-only — Tau Prolog is loaded from CDN in the browser.
+    enabled: !!career && typeof window !== "undefined",
   });
 
   return (
     <main className="relative min-h-screen grid-bg px-6 py-12">
       <div className="mx-auto max-w-4xl">
         <h1 className="font-display flex items-center gap-2 text-2xl font-black sm:text-3xl">
-          <Briefcase className="h-7 w-7 text-primary" /> <span className="text-gradient">Career Advisor</span>
+          <Briefcase className="h-7 w-7 text-primary" /> <span className="text-gradient">{t("career.title")}</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">Pick your career — Prolog reasons about the best laptops for it.</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("career.subtitle")}</p>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          {CAREERS.map((c) => (
+          {CAREER_KEYS.map((key) => (
             <button
-              key={c.key}
-              onClick={() => setCareer(c.key)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${career === c.key ? "border-primary bg-primary/10 text-primary glow" : "border-border bg-background/40 hover:border-primary"}`}
+              key={key}
+              onClick={() => setCareer(key)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                career === key
+                  ? "border-primary bg-primary/10 text-primary glow"
+                  : "border-border bg-background/40 hover:border-primary"
+              }`}
             >
-              {c.label}
+              {t(`career.careers.${key}`)}
             </button>
           ))}
         </div>
@@ -60,22 +60,36 @@ function Career() {
         {isFetching && (
           <div className="mt-12 flex flex-col items-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="mt-3 text-sm text-muted-foreground">Running Prolog inference…</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t("common.running")}</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-6 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+            {(error as Error).message}
           </div>
         )}
 
         {data && data.length > 0 && (
           <div className="mt-8 grid gap-4">
             {data.map((r, i) => (
-              <motion.div key={r.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={`glass rounded-2xl p-5 ${i === 0 ? "glow" : ""}`}>
+              <motion.div
+                key={r.name}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className={`glass rounded-2xl p-5 ${i === 0 ? "glow" : ""}`}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground">#{r.rank} · {r.brand}</div>
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                      #{r.rank} · {r.brand}
+                    </div>
                     <h3 className="font-display text-lg font-semibold">{r.name}</h3>
                   </div>
                   <div className="text-right">
                     <div className="font-display text-2xl font-bold text-gradient">${r.price}</div>
-                    <div className="text-xs text-muted-foreground">Match {r.score}</div>
+                    <div className="text-xs text-muted-foreground">{t("career.match")} {r.score}</div>
                   </div>
                 </div>
                 <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
@@ -89,12 +103,15 @@ function Career() {
         )}
 
         {career && data && data.length === 0 && !isFetching && (
-          <p className="mt-8 text-muted-foreground">No matches found. Try the full Advisor for finer control.</p>
+          <p className="mt-8 text-muted-foreground">{t("career.noMatch")}</p>
         )}
 
         <div className="mt-10">
-          <Link to="/advisor" className="bg-gradient-hero inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-primary-foreground glow">
-            Full Advisor <ArrowRight className="h-4 w-4" />
+          <Link
+            to="/advisor"
+            className="bg-gradient-hero inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-primary-foreground glow"
+          >
+            {t("career.fullAdvisor")} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
