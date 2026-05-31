@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Loader2, Briefcase, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getRecommendations } from "@/lib/prolog/engine";
+import { formatPKR } from "@/lib/format";
 
 export const Route = createFileRoute("/career")({
   head: () => ({
@@ -88,7 +89,7 @@ function Career() {
                     <h3 className="font-display text-lg font-semibold">{r.name}</h3>
                   </div>
                   <div className="text-right">
-                    <div className="font-display text-2xl font-bold text-gradient">${r.price}</div>
+                    <div className="font-display text-2xl font-bold text-gradient">{formatPKR(r.price)}</div>
                     <div className="text-xs text-muted-foreground">{t("career.match")} {r.score}</div>
                   </div>
                 </div>

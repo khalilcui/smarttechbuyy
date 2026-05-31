@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, ArrowLeft, RotateCcw, Trophy } from "lucide-react";
 import { QUESTIONS } from "@/lib/onboarding";
 import { getRecommendations, type Recommendation } from "@/lib/prolog/engine";
+import { formatPKR } from "@/lib/format";
 
 export const Route = createFileRoute("/advisor")({
   head: () => ({
@@ -214,7 +215,7 @@ function Section({ title, items }: { title: string; items: Recommendation[] }) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-display text-2xl font-bold text-gradient">${r.price}</div>
+                <div className="font-display text-2xl font-bold text-gradient">{formatPKR(r.price)}</div>
                 <div className="text-xs text-muted-foreground">Match score {r.score}</div>
               </div>
             </div>

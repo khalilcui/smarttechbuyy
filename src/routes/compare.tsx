@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Laptop, Smartphone, GitCompare, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getCatalog, type DeviceType } from "@/lib/prolog/engine";
+import { formatPKR } from "@/lib/format";
 
 export const Route = createFileRoute("/compare")({
   head: () => ({
@@ -90,7 +91,7 @@ function Compare() {
                   <motion.div key={`${item.name}-${idx}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5">
                     <div className="text-xs uppercase tracking-wide text-muted-foreground">{item.brand}</div>
                     <h3 className="font-display text-lg font-semibold">{item.name}</h3>
-                    <div className="font-display mt-1 text-2xl font-bold text-gradient">${item.price}</div>
+                    <div className="font-display mt-1 text-2xl font-bold text-gradient">{formatPKR(item.price)}</div>
                     <div className="mt-4 space-y-3">
                       {[item.a, item.b, item.c].map((val, i) => {
                         const other = idx === 0 ? [b.a, b.b, b.c][i] : [a.a, a.b, a.c][i];
