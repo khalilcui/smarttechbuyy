@@ -1,31 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Send, X, Sparkles } from "lucide-react";
+import { Bot, Send, X, Sparkles, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useServerFn } from "@tanstack/react-start";
+import { chatWithAI } from "@/lib/ai-chat.functions";
 
 interface Msg {
-  role: "bot" | "user";
-  text: string;
-}
-
-// Local knowledge for FAQ/spec explanations. Recommendations themselves stay
-// in Prolog (the Advisor); this assistant explains terms & guides navigation.
-const KNOWLEDGE: { match: RegExp; answer: string }[] = [
-  { match: /how.*(use|work|start)/i, answer: "Click ‘Start the Advisor’, answer 20 quick questions, and the Prolog engine ranks the best devices for you with reasons." },
-  { match: /\b(rtx|gpu|graphics)\b/i, answer: "An RTX GPU (e.g. RTX 4060) is a dedicated NVIDIA graphics card — great for gaming, 3D, video editing and AI/ML acceleration." },
-  { match: /amoled|oled|display|screen/i, answer: "AMOLED/OLED screens light each pixel individually, giving deep blacks, vivid colors and better battery on dark content." },
-  { match: /nvme|ssd|storage/i, answer: "An NVMe SSD is ultra-fast flash storage connected over PCIe — far quicker than SATA SSDs or hard drives for boot and load times." },
-  { match: /\bnpu\b|ai (chip|processor|engine)/i, answer: "An NPU (Neural Processing Unit) accelerates on-device AI tasks like image processing and assistants, efficiently and offline." },
-  { match: /best.*(ai|ml|machine learning).*laptop|laptop.*ai/i, answer: "For AI/ML, pick a laptop with a strong discrete GPU and 32GB RAM. Run the Advisor and choose ‘AI/ML’ — Prolog will rank the best options." },
-  { match: /best.*gaming.*(phone|mobile)|gaming phone/i, answer: "A great gaming phone has a flagship SoC, high-refresh AMOLED and big battery. Try the Advisor and select gaming — Prolog will recommend." },
-  { match: /compare/i, answer: "Use the Compare page to put two devices side-by-side with Prolog-computed scores." },
-  { match: /theme|color|dark|light/i, answer: "Tap the palette icon in the navbar to switch themes (Dark Blue, Purple, Cyber Green, Red, Orange, Light) or pick a custom color." },
-  { match: /language|urdu|arabic|pashto|sindhi|punjabi|translat/i, answer: "Use the globe icon to switch language — English, Urdu, Pashto, Sindhi, Punjabi and Arabic, with full RTL support." },
-];
-
-function answerFor(q: string): string {
-  for (const k of KNOWLEDGE) if (k.match.test(q)) return k.answer;
-  return "I can explain specs (RTX, AMOLED, NVMe, NPU), guide you through the site, or you can run the Advisor for a full Prolog-powered recommendation. Try asking ‘Which laptop is best for AI?’.";
+  role: "user" | "assistant";
+  content: string;
 }
 
 export function AIAssistant() {
@@ -33,23 +15,37 @@ export function AIAssistant() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const chat = useServerFn(chatWithAI);
 
   useEffect(() => {
     if (open && messages.length === 0) {
-      setMessages([{ role: "bot", text: t("assistant.greeting") }]);
+      setMessages([{ role: "assistant", content: t("assistant.greeting") }]);
     }
   }, [open, messages.length, t]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
 
-  function send() {
+  async function send() {
     const q = input.trim();
-    if (!q) return;
-    setMessages((m) => [...m, { role: "user", text: q }, { role: "bot", text: answerFor(q) }]);
+    if (!q || loading) return;
+    const next: Msg[] = [...messages, { role: "user", content: q }];
+    setMessages(next);
     setInput("");
+    setLoading(true);
+    try {
+      const history = next.filter((m) => m.role === "user" || m.role === "assistant");
+      const { reply } = await chat({ data: { messages: history } });
+      setMessages((m) => [...m, { role: "assistant", content: reply }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${msg}` }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -79,16 +75,23 @@ export function AIAssistant() {
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                    className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${
                       m.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-background/60 text-foreground"
                     }`}
                   >
-                    {m.text}
+                    {m.content}
                   </div>
                 </div>
               ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-background/60 text-foreground inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" /> …
+                  </div>
+                </div>
+              )}
               <div ref={endRef} />
             </div>
 
@@ -98,11 +101,13 @@ export function AIAssistant() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
                 placeholder={t("common.askPlaceholder")}
-                className="flex-1 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm outline-none focus:border-primary"
+                disabled={loading}
+                className="flex-1 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
               />
               <button
                 onClick={send}
-                className="bg-gradient-hero rounded-lg p-2 text-primary-foreground"
+                disabled={loading}
+                className="bg-gradient-hero rounded-lg p-2 text-primary-foreground disabled:opacity-50"
                 aria-label={t("common.send")}
               >
                 <Send className="h-4 w-4" />
