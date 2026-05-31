@@ -9,6 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StoresRouteImport } from './routes/stores'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as FeedbackRouteImport } from './routes/feedback'
+import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompareRouteImport } from './routes/compare'
@@ -18,6 +23,31 @@ import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
+const StoresRoute = StoresRouteImport.update({
+  id: '/stores',
+  path: '/stores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -68,6 +98,11 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/features': typeof FeaturesRoute
+  '/feedback': typeof FeedbackRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/stores': typeof StoresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +113,11 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/features': typeof FeaturesRoute
+  '/feedback': typeof FeedbackRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/stores': typeof StoresRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +129,11 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/features': typeof FeaturesRoute
+  '/feedback': typeof FeedbackRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/stores': typeof StoresRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +146,11 @@ export interface FileRouteTypes {
     | '/compare'
     | '/contact'
     | '/dashboard'
+    | '/features'
+    | '/feedback'
+    | '/login'
+    | '/signup'
+    | '/stores'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +161,11 @@ export interface FileRouteTypes {
     | '/compare'
     | '/contact'
     | '/dashboard'
+    | '/features'
+    | '/feedback'
+    | '/login'
+    | '/signup'
+    | '/stores'
   id:
     | '__root__'
     | '/'
@@ -121,6 +176,11 @@ export interface FileRouteTypes {
     | '/compare'
     | '/contact'
     | '/dashboard'
+    | '/features'
+    | '/feedback'
+    | '/login'
+    | '/signup'
+    | '/stores'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,10 +192,50 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
+  FeaturesRoute: typeof FeaturesRoute
+  FeedbackRoute: typeof FeedbackRoute
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
+  StoresRoute: typeof StoresRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/stores': {
+      id: '/stores'
+      path: '/stores'
+      fullPath: '/stores'
+      preLoaderRoute: typeof StoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -204,17 +304,12 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
+  FeaturesRoute: FeaturesRoute,
+  FeedbackRoute: FeedbackRoute,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
+  StoresRoute: StoresRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
